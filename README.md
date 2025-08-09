@@ -15,10 +15,22 @@ An Obsidian plugin that toggles attachment files between public and private stat
 
 This plugin is intended to be used with [Quartz's](https://quartz.jzhao.xyz/) [Explicit Publish and ignorePatterns](https://oliverfalvai.com/evergreen/my-quartz-+-obsidian-note-publishing-setup#mixing-private-and-public-notes).
 ## Installation
+**Pre-requisite**: Ensure Node and Git are installed on your machine
 
-1. Clone or download this plugin into your vault's `.obsidian/plugins/quartz-toggle-public-image` folder from the [repository](https://github.com/Haroombe/obsidian-quartz-toggle-public-image-plugin.git).
-2. Enable it in Obsidian’s Community Plugins.
-3. Configure the prefix in plugin settings if you want to change the default.
+1. Clone this repository as a `git submodule` in your vault at `.obsidian/plugins/`
+```bash
+	git submodule add -f https://github.com/Haroombe/obsidian-quartz-toggle-public-image-plugin obsidian-quartz-toggle-public-image-plugin
+```
+2. Install dependencies
+```bash
+	npm i
+```
+3. Build the plugin
+```bash
+	npm run build
+``` 
+6. Enable it in Obsidian’s Community Plugins.
+7. (Optional) Configure the prefix in plugin settings if you want to change the default.
 
 ## Usage
 
