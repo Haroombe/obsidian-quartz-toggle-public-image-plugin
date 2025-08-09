@@ -1,81 +1,139 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, TAbstractFile, TFile, Modal, Menu, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
 interface MyPluginSettings {
-	mySetting: string;
+	prefix: string;
 }
-
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+	prefix: "public"
+};
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 
 	async onload() {
 		await this.loadSettings();
+		this.addSettingTab(new ToggleAttachmentPublicSettingsTab(this.app, this));
+		// on attachment open (!**.md) -> add status bar text below to show private or public image
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		this.registerEvent(this.app.workspace.on("file-menu", (menu, file, source) => {
+			const prefixWithDash = this.settings.prefix + "-";
+			// ONLY FOR ATTACHMENTS
+			if (!(file instanceof TFile)) return;
+			if (file.name.toLowerCase().endsWith(".md")) { return }
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
+			const isPublicFile: boolean = this.isPublicFile(file);
+			if (isPublicFile) {
+				menu.addItem((item) => {
+					item.setTitle('Toggle private')
+						.onClick(async () => {
+							try {
+
+								await this.app.fileManager.renameFile(
+									file,
+									`${file.parent?.path ?? ''}/${file.name.replace(new RegExp('^' + prefixWithDash), '')}`
+								);
+							} catch (e) {
+								new Notice(`Failed to rename ${file.name}: ${(e as Error).message}`);
+							} 
+							new Notice(`${file.path} changed to ${isPublicFile ? 'Public' : 'Private'}`);
+
+						})
+						
+
+
+				})
 			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
+			else {
+
+				menu.addItem((item) => {
+					item.setTitle('Toggle Public')
+						.onClick(async () => {
+							try {
+								await this.app.fileManager.renameFile(
+									file,
+									`${file.parent?.path ?? ''}/${prefixWithDash}${file.name}`
+								);
+							} catch (e) {
+								new Notice(`Failed to rename ${file.name}: ${(e as Error).message}`);
+							}
+							new Notice(`${file.path} changed to ${isPublicFile ? 'Public' : 'Private'}`);
+
+						});
+				})
+
 			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
+		}))
+
+
+		this.registerEvent(this.app.workspace.on("files-menu", (menu, fileOrFiles, source) => {
+			const prefixWithDash = this.settings.prefix + "-";
+
+			let files: TAbstractFile[] = [];
+
+			if (Array.isArray(fileOrFiles)) {
+				files = fileOrFiles;
+			} else if (fileOrFiles) {
+				files = [fileOrFiles];
+			} else {
+				return;
 			}
-		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+			// Filter attachments only (non-md files)
+			const attachmentFiles = files.filter(f => f instanceof TFile && !f.name.toLowerCase().endsWith(".md"));
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
+			if (attachmentFiles.length === 0) return;
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+			// Separate public and private files
+			const publicFiles = attachmentFiles.filter(f => this.isPublicFile(f));
+			const privateFiles = attachmentFiles.filter(f => !this.isPublicFile(f));
+
+			// If no public and no private, no menu
+			if (publicFiles.length === 0 && privateFiles.length === 0) return;
+
+			// Add "Make Private" if one or more public files
+			if (publicFiles.length > 0) {
+				menu.addItem(item => {
+					item.setTitle(`Make Private (${publicFiles.length} file${publicFiles.length > 1 ? 's' : ''})`)
+						.onClick(async () => {
+							for (const file of publicFiles) {
+								try {
+									await this.app.fileManager.renameFile(
+										file,
+										`${file.parent?.path ?? ''}/${file.name.replace(new RegExp('^' + prefixWithDash), '')}`
+									);
+								} catch (e) {
+									new Notice(`Failed to rename ${file.name}: ${(e as Error).message}`);
+								}
+							}
+							new Notice(`Made ${publicFiles.length} file${publicFiles.length > 1 ? 's' : ''} private`);
+						});
+				});
+			}
+
+			// Add "Make Public" if one or more private files
+			if (privateFiles.length > 0) {
+				menu.addItem(item => {
+					item.setTitle(`Make Public (${privateFiles.length} file${privateFiles.length > 1 ? 's' : ''})`)
+						.onClick(async () => {
+							for (const file of privateFiles) {
+								try {
+									await this.app.fileManager.renameFile(
+										file,
+										`${file.parent?.path ?? ''}/${prefixWithDash}${file.name}`
+									);
+								} catch (e) {
+									new Notice(`Failed to rename ${file.name}: ${(e as Error).message}`);
+								}
+							}
+							new Notice(`Made ${privateFiles.length} file${privateFiles.length > 1 ? 's' : ''} public`);
+						});
+				});
+			}
+		}));
 	}
 
 	onunload() {
@@ -89,25 +147,15 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+	isPublicFile(file: TAbstractFile): boolean {
+		const prefix = this.settings.prefix + "-";
+		return file.name.startsWith(prefix);
+	}
+
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
+class ToggleAttachmentPublicSettingsTab extends PluginSettingTab {
 	plugin: MyPlugin;
 
 	constructor(app: App, plugin: MyPlugin) {
@@ -116,18 +164,23 @@ class SampleSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName("Public prefix")
+			.setDesc("The prefix used to mark a file as public")
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder("public")
+				.setValue(this.plugin.settings.prefix)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.prefix = value;
+					if (this.plugin.settings.prefix.trim().length === 0) { // empty string
+						this.plugin.settings.prefix = DEFAULT_SETTINGS.prefix;
+
+					}
+					console.log(this.plugin.settings.prefix)
 					await this.plugin.saveSettings();
 				}));
 	}
