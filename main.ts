@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, TAbstractFile, TFile, Modal, Menu, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, TAbstractFile, TFile, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -180,7 +180,6 @@ class ToggleAttachmentPublicSettingsTab extends PluginSettingTab {
 						this.plugin.settings.prefix = DEFAULT_SETTINGS.prefix;
 
 					}
-					console.log(this.plugin.settings.prefix)
 					await this.plugin.saveSettings();
 				}));
 	}
