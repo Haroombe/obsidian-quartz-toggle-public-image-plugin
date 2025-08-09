@@ -2,15 +2,15 @@ import { App, TAbstractFile, TFile, Notice, Plugin, PluginSettingTab, Setting } 
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
+interface TogglePublicPrivateAttachmentSettings {
 	prefix: string;
 }
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: TogglePublicPrivateAttachmentSettings = {
 	prefix: "public"
 };
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class TogglePublicPrivateAttachment extends Plugin {
+	settings: TogglePublicPrivateAttachmentSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -49,7 +49,7 @@ export default class MyPlugin extends Plugin {
 			else {
 
 				menu.addItem((item) => {
-					item.setTitle('Toggle Public')
+					item.setTitle('Toggle public')
 						.onClick(async () => {
 							try {
 								await this.app.fileManager.renameFile(
@@ -97,7 +97,7 @@ export default class MyPlugin extends Plugin {
 			// Add "Make Private" if one or more public files
 			if (publicFiles.length > 0) {
 				menu.addItem(item => {
-					item.setTitle(`Make Private (${publicFiles.length} file${publicFiles.length > 1 ? 's' : ''})`)
+					item.setTitle(`Make private (${publicFiles.length} file${publicFiles.length > 1 ? 's' : ''})`)
 						.onClick(async () => {
 							for (const file of publicFiles) {
 								try {
@@ -117,7 +117,7 @@ export default class MyPlugin extends Plugin {
 			// Add "Make Public" if one or more private files
 			if (privateFiles.length > 0) {
 				menu.addItem(item => {
-					item.setTitle(`Make Public (${privateFiles.length} file${privateFiles.length > 1 ? 's' : ''})`)
+					item.setTitle(`Make public (${privateFiles.length} file${privateFiles.length > 1 ? 's' : ''})`)
 						.onClick(async () => {
 							for (const file of privateFiles) {
 								try {
@@ -156,9 +156,9 @@ export default class MyPlugin extends Plugin {
 
 
 class ToggleAttachmentPublicSettingsTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: TogglePublicPrivateAttachment;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: TogglePublicPrivateAttachment) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
