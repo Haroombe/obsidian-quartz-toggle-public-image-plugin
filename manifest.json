@@ -3,7 +3,7 @@
 	"name": "Toggle Public/Private Attachment",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Toggles file(s) as private or public by adding or removing a prefix, meant to work with a Quartz configuration called Explicit Publish and ignorePatterns https://oliverfalvai.com/evergreen/my-quartz-+-obsidian-note-publishing-setup#mixing-private-and-public-notes",
+	"description": "Toggles file(s) as private or public by adding or removing a prefix, meant to work with a Quartz configuration called Explicit Publish and ignorePatterns",
 	"author": "Haroombe",
 	"authorUrl": "https://github.com/Haroombe",
 	"fundingUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUjcmljayBhc3RsZXkgbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D",
