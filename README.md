@@ -13,7 +13,7 @@ An Obsidian plugin that toggles attachment files between public and private stat
 - Customizable prefix string (default: `public`), with automatic hyphen added internally.
 - Skips non-attachment files silently.
 
-This plugin is intended to be used with [Quartz's](https://quartz.jzhao.xyz/) [Explicit Publish and ignorePatterns](https://oliverfalvai.com/evergreen/my-quartz-+-obsidian-note-publishing-setup#mixing-private-and-public-notes)
+This plugin is intended to be used with [Quartz's](https://quartz.jzhao.xyz/) [Explicit Publish and ignorePatterns](https://oliverfalvai.com/evergreen/my-quartz-+-obsidian-note-publishing-setup#mixing-private-and-public-notes).
 ## Installation
 
 1. Clone or download this plugin into your vault's `.obsidian/plugins/quartz-toggle-public-image` folder from the [repository](https://github.com/Haroombe/obsidian-quartz-toggle-public-image-plugin.git).
